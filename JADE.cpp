@@ -10,9 +10,9 @@
 //
 // More details on the following paper:
 //
-// De Falco, I., Della Cioppa, A., Trunfio, G.A. 'Surrogate-assisted Cooperative Coevolution
-// for Large-Scale Optimization of Computationally Expensive Objective Functions, submitted'
-//
+// De Falco, I., Della Cioppa, A., Trunfio, G.A. 
+// 'Investigating Surrogate-assisted Cooperative Coevolution for Large-Scale Global Optimization', 
+// submitted'
 //=============================================================================================
 
 #include "JADE.h"
