@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -28,26 +28,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -73,7 +73,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\SOCO_SI;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\eigen;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\km;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\libgp\include;C:\CODICI\dlib-18.17;.\fastFractal;.\;.\cec2010;.\cec2013;$(IncludePath)</IncludePath>
+    <IncludePath>.\rbfn;.\qpa;.\tclap\include;.\SOCO_SI;.\eigen;.\libgp\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -81,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\SOCO_SI;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\eigen;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\km;C:\CODICI\SurrogateAssistedCCDEnew - SISOCO\libgp\include;C:\CODICI\dlib-18.17;.\fastFractal;.\;.\cec2010;.\cec2013;$(IncludePath)</IncludePath>
+    <IncludePath>.\rbfn;.\qpa;.\tclap\include;.\SOCO_SI;.\eigen;.\libgp\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="CCDE.cpp" />
     <ClCompile Include="Decomposer.cpp" />
+    <ClCompile Include="dlib\all\source.cpp" />
     <ClCompile Include="libgp\src\cg.cc" />
     <ClCompile Include="libgp\src\cov.cc" />
     <ClCompile Include="libgp\src\cov_factory.cc" />

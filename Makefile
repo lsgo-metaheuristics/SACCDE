@@ -13,8 +13,8 @@ FUNCTOBJS = funsoft.o
 saccjade.exe : $(CCDEOBJS) $(KMOBJS) $(LIBGPOBS) $(FUNCTOBJS)
 	$(CC) $(CFLAGS) $(CCDEOBJS) $(KMOBJS) $(LIBGPOBS) $(FUNCTOBJS) -o saccjade.exe
 
-$(CCDEOBJS) : main.cpp CCDE.cpp Decomposer.cpp JADE.cpp sobol.cpp ./qpa/QuadraticRegression.cpp ./rbfn/KmeansPP.cpp ./rbfn/RBFNetwork.cpp
-	$(CC) $(CFLAGS) $(INCLUDEDIRS) -c main.cpp CCDE.cpp Decomposer.cpp JADE.cpp sobol.cpp ./qpa/QuadraticRegression.cpp ./rbfn/KmeansPP.cpp ./rbfn/RBFNetwork.cpp
+$(CCDEOBJS) : main.cpp CCDE.cpp Decomposer.cpp JADE.cpp sobol.cpp ./dlib/all/source.cpp ./qpa/QuadraticRegression.cpp ./rbfn/KmeansPP.cpp ./rbfn/RBFNetwork.cpp
+	$(CC) $(CFLAGS) $(INCLUDEDIRS) -c main.cpp CCDE.cpp Decomposer.cpp JADE.cpp sobol.cpp ./dlib/all/source.cpp ./qpa/QuadraticRegression.cpp ./rbfn/KmeansPP.cpp ./rbfn/RBFNetwork.cpp
 	
 $(FUNCTOBJS) : SOCO_SI/funsoft.cpp
 	$(CC) $(CFLAGS) $(INCLUDEDIRS) -c SOCO_SI/funsoft.cpp

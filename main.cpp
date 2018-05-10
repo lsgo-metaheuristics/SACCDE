@@ -46,7 +46,7 @@ tFitness  functionsOptima[] = { -450.0, -450.0, 390.0, -330.0, -180.0, -140.0, 0
 void optimization(int argc, char* argv[])
 {   
 	unsigned int functionIndex;
-	typeOfSurrogate sType; //allowed: {sNone, sGP, sQPA, sRBFN}
+	typeOfSurrogate sType; //allowed: {sNone, sGP, sQPA, sRBFN, sSVR}
 	unsigned int numRep;
 	unsigned int numItePerCycle;
 	unsigned int problemDimension;
@@ -67,7 +67,7 @@ void optimization(int argc, char* argv[])
 		ValueArg<unsigned int> functionArg("f", "function", "function to optimize [1-19]", false, 1, "int");
 		cmd.add(functionArg);
 
-		ValueArg<unsigned int> surrogateArg("m", "metamodel", "type of fitness metamodel [0->none; 1->GP; 2->QPA; 3->RBFN]", false, 1, "int");
+		ValueArg<unsigned int> surrogateArg("m", "metamodel", "type of fitness metamodel [0->none; 1->GP; 2->QPA; 3->RBFN; 4->SVR]", false, 4, "int");
 		cmd.add(surrogateArg);		
 
 		ValueArg<unsigned int> repArg("r", "repetitions", "number of independent repetitions [1-100]", false, 1, "int");
@@ -114,6 +114,8 @@ void optimization(int argc, char* argv[])
         cout << "SACCJADE with Quadratic Polynomial Local Approsimation" << endl;
     else if (sType == sRBFN)
         cout << "SACCJADE with Radial Basis Function Network" << endl;
+	else if (sType == sSVR)
+		cout << "SACCJADE with Support Vector Regression" << endl;
     else
     {
         cerr << "unknown surrogate" << endl;
@@ -174,6 +176,8 @@ void optimization(int argc, char* argv[])
     else if (sType == sQPA)
 		sprintf_s(fName, "convplot_f%d_dec%d_popsize%d_QPA_SACCJADE.csv", functionIndex + 1, sizeOfSubcomponents, numOfIndividuals);
     else if (sType == sRBFN)
+		sprintf_s(fName, "convplot_f%d_dec%d_popsize%d_RBFN_SACCJADE.csv", functionIndex + 1, sizeOfSubcomponents, numOfIndividuals);
+	else if (sType == sSVR)
 		sprintf_s(fName, "convplot_f%d_dec%d_popsize%d_RBFN_SACCJADE.csv", functionIndex + 1, sizeOfSubcomponents, numOfIndividuals);
 
     fopen_s(&file, fName, "wt");

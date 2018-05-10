@@ -29,7 +29,9 @@
 #include <map>
 #include <cstddef>
 #include "funsoft.h"
-#include <dlib/optimization.h>
+#include "dlib/optimization.h"
+#include "dlib/global_optimization.h"
+#include "dlib/svm.h"
 #include "QuadraticRegression.h"
 #include "RBFNetwork.h"
 #include "gp.h"
@@ -44,7 +46,7 @@ using namespace std;
 
 typedef dlib::matrix<double, 0, 1> column_vector;
 
-typedef enum { sNone = 0, sGP, sQPA, sRBFN} typeOfSurrogate;
+typedef enum { sNone = 0, sGP, sQPA, sRBFN, sSVR} typeOfSurrogate;
 
 struct Pattern {
 	vector<double> point;
@@ -57,6 +59,11 @@ struct Pattern {
 class JADE
 {
 	Decomposer &decomposer;
+
+	typedef dlib::matrix<double, 0, 1> sample_type;
+	typedef dlib::radial_basis_kernel<sample_type> kernel_type;
+	
+
 
 	struct doCompareIndividuals
 	{
@@ -120,6 +127,7 @@ public:
 	double GPLogLikelihood(const column_vector &p);
 	double GPLogLikelihoodD(double *p);
 	const column_vector GPLogLikelihoodGradient(const column_vector &p);
+	void findSVRparameters(std::vector<sample_type> &samples, std::vector<double> &targets, double &gamma, double &c);
 
 	unsigned nfe;
 	vector<unsigned> coordinates;	
@@ -182,5 +190,8 @@ public:
 	QuadraticRegression *qr;
 	bool internalRBFN;
 	RBFNetwork *rbfn;
+
+	dlib::svr_trainer<kernel_type> svrTrainer;
+	dlib::decision_function<kernel_type> svr;
 };
 

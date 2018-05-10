@@ -125,5 +125,8 @@
     <ClCompile Include="rbfn\RBFNetwork.cpp">
       <Filter>File di origine\RBFN</Filter>
     </ClCompile>
+    <ClCompile Include="dlib\all\source.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

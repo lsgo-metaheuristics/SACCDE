@@ -76,7 +76,7 @@ JADE::JADE(unsigned _dimension, unsigned _numberOfIndividuals, Decomposer &_grou
         minNumberOfPatterns = ((dimension + 1)*(dimension + 2)) / 2;
         maxNumberOfPatterns = 3 * minNumberOfPatterns;
     }
-    else if (sType == sRBFN)
+    else if (sType == sRBFN || sType == sSVR )
     {
         minNumberOfPatterns = numberOfIndividuals; //minimum size of archive to be used for generating RBFN surrogates
         maxNumberOfPatterns = 10000; //use all patterns
@@ -317,7 +317,6 @@ void JADE::SAUpdate(typeOfSurrogate sType)
 {
     //Sort the population from best to worst
     sortPopulation(parentsFitness, sortIndex);
-
     //Generate the CR and F values based on Gaussian and Cauchy distribution, respectively
     cauchy_distribution<double> cauchy(JADE_mu_ff, 0.1);
 
@@ -419,7 +418,6 @@ void JADE::SAUpdate(typeOfSurrogate sType)
     //Evaluate the offspring population
     vector<bool> offspringHasTrueFitness(offsprings.size(), true);
     vector<bool> alreadyEvaluated(offsprings.size(), false);
-    tFitness avgErr = 0.0;
     bool failureInSurrogate = false;
 
     offspringsVariance.resize(offsprings.size());
@@ -433,7 +431,7 @@ void JADE::SAUpdate(typeOfSurrogate sType)
     }
     else
     {
-        if (sType == sGP || sType == sRBFN)
+        if (sType == sGP || sType == sRBFN || sType == sSVR )
             trainGlobalSurrogate();
 
         unsigned nSurrogateEvals = 0;
@@ -445,12 +443,15 @@ void JADE::SAUpdate(typeOfSurrogate sType)
                 {
                     bool isTrueFitness = false;
                     offspringsFitness[id] = calculateSurrogateFitnessValue(offsprings[id], sType, isTrueFitness);
+					//double tf = calculateFitnessValue(offsprings[id], true);
+					//cout << tf << " " << fabs(tf - offspringsFitness[id]) << endl;
                     offspringHasTrueFitness[id] = isTrueFitness;
                     alreadyEvaluated[id] = true;
 
                     if (isinf(offspringsFitness[id]) || isnan(offspringsFitness[id]))
                     {
                         failureInSurrogate = true;
+						cout << "failure in surrogate" << endl;
                         offspringsFitness[id] = calculateFitnessValue(offsprings[id], true);
                         offspringHasTrueFitness[id] = true;
                         offspringsVariance[id] = 0.0;
@@ -472,8 +473,6 @@ void JADE::SAUpdate(typeOfSurrogate sType)
             }
 
         }
-
-        if (nSurrogateEvals) avgErr /= nSurrogateEvals;
 
     }
 
@@ -504,7 +503,8 @@ void JADE::SAUpdate(typeOfSurrogate sType)
 
 
     //Evaluate with the exact fitness the best individual
-    sort(&sortIndex[0], &sortIndex[0] + sortIndex.size(), doCompareIndividuals(&offspringsFitness[0]));
+	
+	sort(&sortIndex[0], &sortIndex[0] + sortIndex.size(), doCompareIndividuals(&offspringsFitness[0]));
     while (!offspringHasTrueFitness[sortIndex[0]] )
     {
         offspringsFitness[sortIndex[0]] = calculateFitnessValue(offsprings[sortIndex[0]]);
@@ -998,12 +998,13 @@ tFitness JADE::calculateSurrogateFitnessValue(vector<double> &p, typeOfSurrogate
     if (fabs(decomposer.CCOptimizer.globalBestFitness - decomposer.CCOptimizer.optimum) <1.0E-16)
     {
         isTrueFitness = true;
+		cout << "Already converged" << endl;
         return calculateFitnessValue(p);
     }
 
     clock_t startTime = clock();
 
-    if (sType == sGP || sType == sRBFN )
+    if (sType == sGP || sType == sRBFN || sType== sSVR )
     {
         if (surrogateIsValid && sType == sGP)
         {
@@ -1029,10 +1030,21 @@ tFitness JADE::calculateSurrogateFitnessValue(vector<double> &p, typeOfSurrogate
 
             return f;
         }
+		else if (surrogateIsValid && sType == sSVR)
+		{
+			sample_type x;
+			x.set_size(p.size());
+			for (unsigned ld = 0; ld < coordinates.size(); ld++)
+				x(ld, 0) = -1.0 + 2.0*(p[ld] - minCoordInArchive[ld]) / (maxCoordInArchive[ld] - minCoordInArchive[ld]);
+
+			tFitness f = currentMin + svr(x)*(currentMax - currentMin);
+
+			return f;
+		}
         else
         {
             isTrueFitness = true;
-
+			cout << "Surrogate not valid: using true fitness" << endl;
             return calculateFitnessValue(p);
         }
     }
@@ -1142,6 +1154,79 @@ tFitness JADE::calculateGPSurrogatePredictionVariance(vector<double> &p)
 }
 
 
+
+
+
+void JADE::findSVRparameters(std::vector<sample_type> &samples, std::vector<double> &targets, double &bestGamma, double &bestC)
+{
+	using namespace dlib;
+
+	std::vector<int> ind;
+	for (int i = 0; i < samples.size(); ++i) ind.push_back(i);
+	std::random_shuffle(ind.begin(), ind.end());
+
+	std::vector<sample_type> cvSamples[2];
+	std::vector<double> cvTargets[2];
+	int i = 0;
+	for (; i < 0.8*samples.size(); ++i)
+	{
+		cvSamples[0].push_back(samples[ind[i]]);
+		cvTargets[0].push_back(targets[ind[i]]);
+	}
+	for (; i < samples.size(); ++i)
+	{
+		cvSamples[1].push_back(samples[ind[i]]);
+		cvTargets[1].push_back(targets[ind[i]]);
+	}
+
+
+	dlib::svr_trainer<kernel_type> svrTrainer;
+
+	std::vector<double> gammas;
+	std::vector<double> cs;
+	double minErr = std::numeric_limits<double>::infinity();
+
+	gammas.push_back(0.01);
+	gammas.push_back(0.1);
+	//gammas.push_back(0.25);
+	gammas.push_back(0.5);
+	gammas.push_back(1.0);
+
+	cs.push_back(1);
+	cs.push_back(2);
+	cs.push_back(5);
+	cs.push_back(10);
+	//cs.push_back(100);
+
+
+	for (int i = 0; i < gammas.size(); ++i)
+	{
+		double gamma = gammas[i];
+		for (int j = 0; j < cs.size(); ++j)
+		{
+			double c = cs[j];
+
+			svrTrainer.set_c(c);
+			svrTrainer.set_kernel(kernel_type(gamma));
+			svrTrainer.set_epsilon_insensitivity(1.0E-8);
+
+			svr = svrTrainer.train(cvSamples[0], cvTargets[0]);
+
+			double err = 0;
+			for (int q = 0; q < cvSamples[1].size(); ++q)
+				err += fabs(svr(cvSamples[1][q]) - cvTargets[1][q]);
+
+			if (err < minErr)
+			{
+				bestGamma = gamma;
+				bestC = c;
+				minErr = err;
+			}
+		}
+	}
+}
+
+
 //******************************************************************************************/
 //
 //
@@ -1149,7 +1234,9 @@ tFitness JADE::calculateGPSurrogatePredictionVariance(vector<double> &p)
 //******************************************************************************************/
 void JADE::trainGlobalSurrogate()
 {
-    if (archive->size() < minNumberOfPatterns)
+	
+
+	if (archive->size() < minNumberOfPatterns)
     {
         cerr << "archive->size() < minArchiveSize in trainGlobalSurrogate" << endl;
         exit(1);
@@ -1189,6 +1276,8 @@ void JADE::trainGlobalSurrogate()
                 maxCoordInArchive[ld] = (*archive)[i].point[ld];
         }
     }
+
+	currentMax += 1.0E-06;
 
     if ( sType == sGP )
     {
@@ -1251,6 +1340,57 @@ void JADE::trainGlobalSurrogate()
         tFitness mse = rbfn->training(num_rbf_units, learning_rate, num_iterations, toll);
         surrogateIsValid = true;
     }
+	else if (sType == sSVR)
+	{
+		using namespace dlib;
+
+		std::vector<sample_type> samples;
+		std::vector<double> targets;
+		for (int i = startIndex; i < archive->size(); ++i)
+		{
+			sample_type x;
+			x.set_size(coordinates.size());
+			for (unsigned ld = 0; ld < coordinates.size(); ld++)
+			{
+				x(ld, 0) = -1.0 + 2.0*((*archive)[i].point[ld] - minCoordInArchive[ld]) / (maxCoordInArchive[ld] - minCoordInArchive[ld]);
+			}
+
+			samples.push_back(x);
+			targets.push_back(((*archive)[i].fitness - currentMin) / (currentMax - currentMin));
+			//cout << (currentMax - currentMin) << endl;
+		}
+
+
+		// Now we are making a typedef for the kind of kernel we want to use.  I picked the
+		// radial basis kernel because it only has one parameter and generally gives good
+		// results without much fiddling.
+
+
+		// Now setup a SVR trainer object.  It has three parameters, the kernel and
+		// two parameters specific to SVR.  
+		double gamma = 0.1;
+		double c = 10;
+
+		findSVRparameters(samples, targets, gamma, c);
+	
+		svrTrainer.set_kernel(kernel_type(gamma));
+
+		// This parameter is the usual regularization parameter.  It determines the trade-off 
+		// between trying to reduce the training error or allowing more errors but hopefully 
+		// improving the generalization of the resulting function.  Larger values encourage exact 
+		// fitting while smaller values of C may encourage better generalization.
+		svrTrainer.set_c(c);
+
+		// Epsilon-insensitive regression means we do regression but stop trying to fit a data 
+		// point once it is "close enough" to its target value.  This parameter is the value that 
+		// controls what we mean by "close enough".  In this case, I'm saying I'm happy if the
+		// resulting regression function gets within 0.001 of the target value.
+		svrTrainer.set_epsilon_insensitivity(1.0E-8);
+
+		// Now do the training and save the results
+		svr = svrTrainer.train(samples, targets);
+		surrogateIsValid = true;
+	}
 }
 
 
@@ -1272,7 +1412,7 @@ void JADE::optimize(int iterations)
 
         if (sType == sNone)
             update();
-        else if (sType == sGP || sType == sQPA || sType==sRBFN )
+        else if (sType == sGP || sType == sQPA || sType==sRBFN || sType==sSVR )
         {
             SAUpdate(sType);
         }

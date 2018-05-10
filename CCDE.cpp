@@ -30,8 +30,8 @@ using namespace std;
 //******************************************************************************************/
 CCDE::CCDE()
 {
-    JADE_c = 0.2;
-    JADE_p = 0.2;
+    JADE_c = 0.1;
+    JADE_p = 0.1;
 
     JADE_mutationStrategy = 1;
 }
